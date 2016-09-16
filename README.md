@@ -7,6 +7,15 @@
 
 The pump is printed in PLA on a Prusa i3.
 
+## Principle
+
+* Priming pump
+ * Delivers positive pressure
+* Progressive pump
+ * Delivers a constant flow
+* Nozzle
+ * Apply the clay at a given point in space
+
 ## Thanks 
 
 Freely inspired from the following sources/designs/blueprints:
