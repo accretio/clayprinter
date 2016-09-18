@@ -5,7 +5,13 @@
 
 // crank();
 //rotor();
-stator();   
+
+module all() {
+stator();
+    rotor();
+}
+
+all();
 /* The inlet */
 
 
@@ -38,14 +44,22 @@ v=4*R1*R2*H*360/phi;
 echo(str("Pumping speed is ",v/1000," cc per revolution"));
 
 module rotor(){
-union(){
-linear_extrude(height=H,convexity=20,twist=2*phi)
-translate([R1/2,0,0])
-circle(r=R2);
-translate([cos(2*phi)*R1/2,-sin(2*phi)*R1/2,H])
-linear_extrude(height=top,convexity=20,twist=30,slices=10)
-square(R2,center=true);
-}   
+    
+    union(){
+        linear_extrude(height=H,convexity=20,twist=2*phi)
+            translate([R1/2,0,0])
+                circle(r=R2);
+         translate([0,0,-100])
+       
+               difference(){
+                    cylinder(100, R2/2, R2/2);
+                    translate([0, R2, 2*R2]) {
+                            rotate([90, 0, 0]) {
+                            cylinder(100, R2/4, R2/4);
+                     }  
+                 }
+                } 
+    }   
 }
 
 
