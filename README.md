@@ -3,6 +3,8 @@
 
 # Clay printer
 
+![Loader](screenshots/nozzle.png)
+![Loader](screenshots/loader.png)
 ## Assembly instructions
 
 The pump is printed in PLA on a Prusa i3.
