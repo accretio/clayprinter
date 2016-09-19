@@ -8,7 +8,8 @@
 
 module all() {
 stator();
-    rotor();
+ //  loader();
+ //rotor();
 }
 
 all();
@@ -38,7 +39,7 @@ $fn=40; // number of facets in circles
 NozzleHeight=80;
 NozzleOpening=4;
 
-LoaderHeight=40;
+LoaderHeight=10;
 
 v=4*R1*R2*H*360/phi;
 echo(str("Pumping speed is ",v/1000," cc per revolution"));
@@ -49,10 +50,9 @@ module rotor(){
         linear_extrude(height=H,convexity=20,twist=2*phi)
             translate([R1/2,0,0])
                 circle(r=R2);
-         translate([0,0,-100])
-       
+         translate([0,0,-(4*LoaderHeight)])
                difference(){
-                    cylinder(100, R2/2, R2/2);
+                    cylinder(4*LoaderHeight, R2/2, R2/2);
                     translate([0, R2, 2*R2]) {
                             rotate([90, 0, 0]) {
                             cylinder(100, R2/4, R2/4);
@@ -123,7 +123,7 @@ module nozzle(Rc, Rr) {
         intersection(){
             linear_extrude(height=NozzleHeight,convexity=10,twist=0,slices=100)
             base(Rc, Rr);
-            cylinder(NozzleHeight, 1.2 * (Rc + Rr), NozzleOpening);
+            cylinder(NozzleHeight, 1* (Rc + Rr), NozzleOpening);
         }
     }   
     difference(){
@@ -132,9 +132,22 @@ module nozzle(Rc, Rr) {
                 translate([0,0,-wall]){
                    cylinder(NozzleHeight+2*wall, NozzleOpening, NozzleOpening);   
                            
-                    nozzleInternals(Rc, Rr-wall-4); // double the wall to create a small lip
+                    nozzleInternals(Rc, Rr-wall); // double the wall to create a small lip
                 }
             }; 
+    }
+}
+
+
+BaseRadius=15+2*R2; 
+BaseHeight=40;
+BaseScrewThread=2;
+
+module stator_base() {
+    translate([0, 0, 0]) {
+    linear_extrude(height=BaseHeight,twist=720,slices=100)
+                translate([BaseScrewThread, BaseScrewThread, 0])
+                    circle(BaseRadius, center=true);
     }
 }
 
@@ -145,9 +158,12 @@ module stator(){
         }
     }
     
-        loader(R1, R2 + c2);
+       // loader(R1, R2 + c2);
     difference(){
-        hollow(R1,R2+wall+c2);
+        union() {
+            hollow(R1,R2+wall+c2);
+            stator_base(R1); 
+        }
         difference(){
             hollow(R1,R2+c2);
         /* difference(){
@@ -161,39 +177,75 @@ module stator(){
 }
 
 
-InletOpening=6;
-MotorOpening=R2+2; // make sure that there is enough room to put the rotor
+InletOpening=10;
+MotorOpening=R2/2; // make sure that there is enough room to put the rotor
 
-module loader(Rc, Rr) {
+LoaderSize=100;
+LoaderHeight=80;
+module loader() {
+     difference(){
+        union(){
+            translate([0, 0, -(LoaderHeight+BaseHeight)/2 + BaseHeight]) {
+                cube(size=[LoaderSize, LoaderSize, LoaderHeight + BaseHeight], center=true);
+            }
+            translate([0, 0, 20])
+                rotate([140, 00, 00])
+                    cylinder(130, InletOpening+wall, InletOpening+wall); 
+            translate([0, -75, -60])
+                rotate([180, 0, 0])
+                    cylinder(90, InletOpening+wall, (4*InletOpening)+wall);
+        };
+       stator_base();
+       translate([0, 0, -LoaderHeight/2 + wall] ) {
+           cube(size=[LoaderSize-2*wall, LoaderSize-wall, LoaderHeight - wall], center=true);
+       translate([0, 0, -(LoaderSize/2-wall)]){
+                cylinder(4*wall, MotorOpening, MotorOpening, center=true); 
+        } ;
+       
+       };
+       translate([0, 0, 20]) {
+        rotate([140, 0, 0])
+                cylinder(125, InletOpening, InletOpening); 
+       }
+        translate([0, -75, -60])
+                rotate([180, 0, 0])
+                    cylinder(90, InletOpening, (4*InletOpening));
+      
+       
+  }
+    
+}
+
+module loader_old(Rc, Rr) {
+    
     difference(){
         // the casing of the loader
          union() {
-            translate([0, 0, -(Rc+Rr+wall)])
+            translate([0, 0, -(Rc+Rr)])
                 cube(size=2*(Rc+Rr+wall), center=true); 
-            translate([0, 0, -10]){
+            /*translate([0, 0, -5]){
                 rotate([130, 0, 0])
                     cylinder(100, InletOpening+wall, InletOpening+wall); 
-            }
+            }*/
          }
         // all the things we want to retract
         // something that let us access the shaft
-        translate([0, 0, -2*(Rc+Rr)])
-            linear_extrude(height=1000,convexity=10,twist=0,slices=100)
+        translate([0, 0, -2*1000 + wall])
+            linear_extrude(height=2*1000,convexity=10,twist=0,slices=100)
                 base(Rc, Rr);
-        // the motor entry, actually let's use the rotor
-        translate([0, 0, -2*(Rc+Rr+wall)])
-           cylinder(100, MotorOpening, Motoropening);
         // the inlet
-        translate([0, 0, -10]){
+        translate([0, 0, -5]){
             rotate([130, 0, 0])
                 cylinder(100, InletOpening, InletOpening); 
         } 
         // the internal cavity
-        translate([0, 0, -(Rc+Rr+wall)])
-            cube(size=2*(Rc+Rr), center=true); 
+        translate([0, 0, -(Rc+Rr)])
+            cube(size=2*(Rc+Rr), center=true);  
+        /*translate([0, 0, -(Rc+Rr)])
+            sphere((Rc+Rr), center=true); */
         // and something to trim the bottom
-        translate([-100, -100, -200 - 2*(Rc+Rr+wall)])
-            cube(200, 200, center=false) ;   
+        translate([0, 0,  -(Rc+Rr+wall)])
+            cube(size=2*(Rc + Rr+wall), center=true) ;   
     }
     
 }
