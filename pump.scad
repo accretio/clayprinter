@@ -7,8 +7,8 @@
 //rotor();
 
 module all() {
- stator();
-//   loader();
+ //stator();
+  loader();
  //rotor();
 }
 
@@ -49,7 +49,7 @@ module rotor(){
     union(){
         linear_extrude(height=H,convexity=20,twist=2*phi)
             translate([R1/2,0,0])
-                circle(r=R2);
+                circle(r=R2-c2);
          translate([0,0,-(4*LoaderHeight)])
                difference(){
                     cylinder(4*LoaderHeight, R2/2, R2/2);
@@ -63,21 +63,6 @@ module rotor(){
 }
 
 
-
-module crank(){ 
-union(){
-translate([R2*4,R2/2,0])cylinder(r=R2/2,h=30);
-difference(){
-linear_extrude(height=top)
-union(){
-circle(r=R2);
-polygon(points=[[0,R2],[R2*4,R2],[0,0],[R2*4,R2/2]],paths=[[0,1,3,2]]);
-mirror([R2/2,-R2*4,0])
-polygon(points=[[0,R2],[R2*4,R2],[0,0],[R2*4,R2/2]],paths=[[0,1,3,2]]);
-}
-linear_extrude(height=top,convexity=20,twist=30,slices=10)
-square(R2+2*c1,center=true);
-}}}
 
 module hollow(Rc,Rr){
 linear_extrude(height=H,convexity=10,twist=phi,slices=100)
@@ -158,14 +143,13 @@ module stator(){
         }
     }
     
-       // loader(R1, R2 + c2);
     difference(){
         union() {
-            hollow(R1,R2+wall+c2);
+            hollow(R1,R2+wall);
             stator_base(R1); 
         }
         difference(){
-            hollow(R1,R2+c2);
+            hollow(R1,R2);
         /* difference(){
            translate([0,0,wall-R1-R2]) 
              cube(size=2*R1+2*R2,center=true) ;
@@ -183,73 +167,65 @@ MotorOpening=R2/2; // make sure that there is enough room to put the rotor
 LoaderSize=100;
 LoaderHeight=80;
 module loader() {
-     difference(){
+    difference(){
         union(){
+            translate([0, 0, -LoaderHeight])
+                sphere(r = 2 * (R1 + R2 + 3 * wall));
+   
             translate([0, 0, -(LoaderHeight+BaseHeight)/2 + BaseHeight]) {
                 cube(size=[LoaderSize, LoaderSize, LoaderHeight + BaseHeight], center=true);
-            }
+            }; 
             translate([0, 0, 20])
                 rotate([140, 00, 00])
                     cylinder(130, InletOpening+wall, InletOpening+wall); 
+            
             translate([0, -75, -60])
                 rotate([180, 0, 0])
                     cylinder(90, InletOpening+wall, (4*InletOpening)+wall);
+            
         };
        stator_base();
-       translate([0, 0, -LoaderHeight/2 - wall/2] ) {
-           cube(size=[LoaderSize-2*wall, LoaderSize-2*wall, LoaderHeight - 2*wall ], center=true); 
-          /* translate([0, 0, -(LoaderSize/2-wall)]){
-               cylinder(3*wall, MotorOpening, MotorOpening, center=true); 
-        } ; */ 
-       
-       }; 
-       translate([0, 0, -3*wall])
+        
+        // let's put a stopper. it has to have straight lines or the printer won't be able to print it
+        // (massive overhang)
+       translate([-(LoaderSize-2*wall)/2, -(LoaderSize-2*wall)/2, -(LoaderHeight +wall)]) 
+            cube(size=[LoaderSize -2*wall, LoaderSize -2*wall, LoaderHeight  ], center=false); 
+   
+       // then we carve the internals of the loader
+       translate([-(LoaderSize-2*wall)/2, -(LoaderSize-2*wall)/2, -wall]) 
+            cube(size=[LoaderSize-2*wall, LoaderSize-2*wall, wall], center=false);
+        
+      /* */
+   
+       // here is the motor opening 
+       translate([0, 0, -LoaderSize])
+               cylinder(2 * LoaderSize, MotorOpening, MotorOpening, center=true);
+        
+       // and this is the temporary feeding bowl
+       translate([0, 0, -3*wall]) {
             linear_extrude(height=3*wall,convexity=10,twist=0,slices=100)
-                circle(30)
+                circle(30);
+            };
+        
        translate([0, 0, 20]) {
-        rotate([140, 0, 0])
+            rotate([140, 0, 0])
                 cylinder(125, InletOpening, InletOpening); 
-       }
-        translate([0, -75, -60])
+       };
+       
+       translate([0, -75, -60])
+            rotate([180, 0, 0])
+                cylinder(90, InletOpening, (4*InletOpening));
+       difference(){
+            translate([0, 0, -LoaderHeight])
+                sphere(r = 2 * (R1 + R2 + 2 * wall)); 
+              translate([0, -75, -60])
                 rotate([180, 0, 0])
-                    cylinder(90, InletOpening, (4*InletOpening));
-      
+                    cylinder(90, InletOpening+wall, (4*InletOpening)+wall);
+         
+        
+       }; 
        
   }
-    
-}
-
-module loader_old(Rc, Rr) {
-    
-    difference(){
-        // the casing of the loader
-         union() {
-            translate([0, 0, -(Rc+Rr)])
-                cube(size=2*(Rc+Rr+wall), center=true); 
-            /*translate([0, 0, -5]){
-                rotate([130, 0, 0])
-                    cylinder(100, InletOpening+wall, InletOpening+wall); 
-            }*/
-         }
-        // all the things we want to retract
-        // something that let us access the shaft
-        translate([0, 0, -2*1000 + wall])
-            linear_extrude(height=2*1000,convexity=10,twist=0,slices=100)
-                base(Rc, Rr);
-        // the inlet
-        translate([0, 0, -5]){
-            rotate([130, 0, 0])
-                cylinder(100, InletOpening, InletOpening); 
-        } 
-        // the internal cavity
-        translate([0, 0, -(Rc+Rr)])
-            cube(size=2*(Rc+Rr), center=true);  
-        /*translate([0, 0, -(Rc+Rr)])
-            sphere((Rc+Rr), center=true); */
-        // and something to trim the bottom
-        translate([0, 0,  -(Rc+Rr+wall)])
-            cube(size=2*(Rc + Rr+wall), center=true) ;   
-    }
     
 }
 
