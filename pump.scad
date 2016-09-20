@@ -7,8 +7,8 @@
 //rotor();
 
 module all() {
-stator();
- //  loader();
+ stator();
+//   loader();
  //rotor();
 }
 
@@ -36,7 +36,7 @@ $fn=40; // number of facets in circles
 
 /// CONFIGURATION 
 
-NozzleHeight=80;
+NozzleHeight=60;
 NozzleOpening=4;
 
 LoaderHeight=10;
@@ -132,7 +132,7 @@ module nozzle(Rc, Rr) {
                 translate([0,0,-wall]){
                    cylinder(NozzleHeight+2*wall, NozzleOpening, NozzleOpening);   
                            
-                    nozzleInternals(Rc, Rr-wall); // double the wall to create a small lip
+                    nozzleInternals(Rc, Rr-wall); 
                 }
             }; 
     }
@@ -140,7 +140,7 @@ module nozzle(Rc, Rr) {
 
 
 BaseRadius=15+2*R2; 
-BaseHeight=40;
+BaseHeight=30;
 BaseScrewThread=2;
 
 module stator_base() {
@@ -196,13 +196,16 @@ module loader() {
                     cylinder(90, InletOpening+wall, (4*InletOpening)+wall);
         };
        stator_base();
-       translate([0, 0, -LoaderHeight/2 + wall] ) {
-           cube(size=[LoaderSize-2*wall, LoaderSize-wall, LoaderHeight - wall], center=true);
-       translate([0, 0, -(LoaderSize/2-wall)]){
-                cylinder(4*wall, MotorOpening, MotorOpening, center=true); 
-        } ;
+       translate([0, 0, -LoaderHeight/2 - wall/2] ) {
+           cube(size=[LoaderSize-2*wall, LoaderSize-2*wall, LoaderHeight - 2*wall ], center=true); 
+          /* translate([0, 0, -(LoaderSize/2-wall)]){
+               cylinder(3*wall, MotorOpening, MotorOpening, center=true); 
+        } ; */ 
        
-       };
+       }; 
+       translate([0, 0, -3*wall])
+            linear_extrude(height=3*wall,convexity=10,twist=0,slices=100)
+                circle(30)
        translate([0, 0, 20]) {
         rotate([140, 0, 0])
                 cylinder(125, InletOpening, InletOpening); 
